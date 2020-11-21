@@ -1,0 +1,34 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Instalar o .NET 5'
+  inputs:
+    packageType: 'sdk'
+    version: '5.0.100'
+- script: dotnet --list-sdks
+  displayName: 'Listar versões do .NET disponíveis'
+- task: DotNetCoreCLI@2
+  displayName: 'Gerar publish da Web App'
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    workingDirectory: './SiteContagem'
+- task: PublishBuildArtifacts@1
+  displayName: 'Gerar Artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'sitecontagem-publish'
+    publishLocation: 'Container'
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Publicação no Azure App Service'
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'AZURE SUBSCRIPTION'
+    appType: 'webApp'
+    WebAppName: 'groffesitecontagem'
+    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
